@@ -1,0 +1,324 @@
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.esri.arcgisruntime.java'
+apply plugin: 'eclipse'
+buildscript {
+   ext {
+          springBootVersion = '1.5.6.RELEASE'
+   }
+   repositories {
+   		mavenLocal()
+		maven { url "https://plugins.gradle.org/m2/" }		
+ 		maven { url 'https://esri.bintray.com/arcgis' }
+   
+                  maven {
+                         
+                  url "$artifactoryPullUrl" 
+                 } 
+   }
+   dependencies {
+   classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+   classpath("io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE")
+   classpath 'com.esri.arcgisruntime:gradle-arcgis-java-plugin:1.0.0'    
+   }
+}
+
+allprojects {
+    group = 'com.apporchid'
+    apply plugin: 'eclipse'
+
+    task wrapper(type: Wrapper) {
+        gradleVersion = '4.2.1'
+    }
+   
+   configurations.all {
+       	resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+ 		//resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+   
+       exclude group: "log4j"
+       exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+       exclude group: 'org.hibernate', module: 'hibernate-core:5.0.12.Final'
+       resolutionStrategy {
+	        force "net.minidev:json-smart:2.1.1"
+	        force "com.google.guava:guava:19.0"
+	    }
+	    exclude group: 'com.google.guava', module: 'guava:22.0'
+   }   
+   
+      repositories {
+   		mavenLocal()
+	  }
+}
+
+
+	arcgis.version = '100.1.0'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+       repositories {             
+                      maven {
+                            
+                      url "$artifactoryPullUrl" 
+                     }   
+       
+       }
+
+              
+bootRepackage {
+   mainClass = 'com.apporchid.template.AOPlatformTemplateApplication'
+}
+
+def Properties props = new Properties()
+def deployPropFile = file('deploy.properties')   
+def solutionName;
+def aoCompositeServerPath;
+
+if (deployPropFile.canRead()){
+    props.load(new FileInputStream(deployPropFile))
+
+    if (props!=null){
+	    if (props.containsKey('solution.name')) {
+	        solutionName = props['solution.name']
+	        logger.info('solution.name found ${solution.name}')
+	    }else{
+	        logger.error("solution.name property not found")
+	    }
+	    
+	     if (props.containsKey('ao.composite.server.path')) {
+	        aoCompositeServerPath = props['ao.composite.server.path']
+	         logger.info('ao.composite.server.path found ${ao.composite.server.path}')
+	    }else{
+	        println("ao.composite.server.path property not found")
+	    }
+    }
+}
+
+dependencies {
+
+    compile("com.apporchid:ao-common:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:ao-core:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:ao-jpa:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:ao-license:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:ao-schedulers:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:ao-security:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:cloudseer-common:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:cloudseer:${artifactVersion}"){ changing = true}   	
+   	compile("com.apporchid:ao-config-builder:${artifactVersion}"){ changing = true}
+    compile group: "com.apporchid", name: "cloudseer-pipeline", version: "${artifactVersion}", changing: true
+   	
+    compile("com.apporchid:cloudseer-transformer:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:cloudseer-datasource:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:agora-analytics:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:ao-elasticsearch:${artifactVersion}"){ changing = true}
+    compile("com.apporchid:vulcanux:${artifactVersion}"){ changing = true}
+    
+	compile "org.elasticsearch:elasticsearch:${elastic_search_version}"    
+	compile "org.elasticsearch.client:elasticsearch-rest-high-level-client:${elastic_search_version}"
+	compile "org.elasticsearch.client:elasticsearch-rest-client:${elastic_search_version}"
+	compile group: 'org.ehcache', name: 'ehcache', version: '3.1.3'
+	
+	compile('org.springframework.boot:spring-boot-starter-aop')
+	compile("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: "spring-boot-starter-logging"
+        exclude group: 'org.slf4j'
+        exclude group: 'ch.qos.logback'
+    }
+    compile("org.springframework.boot:spring-boot-starter-actuator"){
+        exclude group: 'org.slf4j'
+         exclude group: 'ch.qos.logback'
+    }
+    compile('org.springframework.boot:spring-boot-starter:1.5.6.RELEASE')
+    
+    testCompile "org.testng:testng:6.8.13" 
+  	testCompile "org.springframework.boot:spring-boot-starter-test"
+	testCompile group: 'org.springframework', name: 'spring-test', version: '4.3.11.RELEASE'
+	testCompile group: 'org.hamcrest', name: 'hamcrest-junit', version: '2.0.0.0' 
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	
+    classifier = 'sources'
+    from sourceSets.main.allJava    
+    doLast {
+		logger.quiet("${rootProject.name}-sources.jar file created in $project.buildDir/libs")
+	}
+}
+
+task cleanResources(type: Delete) {
+   delete 'build/resources'
+   }
+       
+   clean {
+   		delete "package-lock.json"
+       delete "target"
+   }
+
+   task stage(dependsOn: 'bootRepackage') {
+   }
+
+test {
+ useTestNG() {
+ 	includeGroups 'solutionMain'
+ }
+}
+ 
+task runTest(type: Test, dependsOn: 'test') {
+	doFirst {
+		logger.quiet("Deployed Solution Json to AO Composite Server through test case")
+	}
+}
+
+jar{
+	exclude('com/apporchid/solution/custom/config/**')  
+	
+	doLast {
+		logger.quiet("${rootProject.name}.jar file created in $project.buildDir/libs")
+	}
+}
+
+task cleanDeployedSolutionJar(type: Delete) {
+	
+	def aoCompositeServerSolutionJarPath = file("${aoCompositeServerPath}/src/main/webapp/libs/"+"${rootProject.name}"+".jar")
+    delete aoCompositeServerSolutionJarPath
+    
+    def aoCompositeServerSolutionSourcesJarPath = file("${aoCompositeServerPath}/src/main/webapp/libs/"+"${rootProject.name}"+"-sources.jar")
+    delete aoCompositeServerSolutionSourcesJarPath
+   
+    
+    def sourceJarPath = file("$project.buildDir/libs/")
+    delete sourceJarPath
+   
+    doLast {
+	 	logger.quiet( "Deleted ${rootProject.name}.jar file from ${aoCompositeServerPath}/src/main/webapp/libs/")
+	  	logger.quiet( "Deleted ${rootProject.name}-sources.jar file from "+sourceJarPath)
+	}
+}
+
+task cleanDeployedSolutionUI(type: Delete) {
+	def aoCompositeServerSolutionPath = file("${aoCompositeServerPath}/src/main/webapp/main-ui/solutions/"+"${solutionName}")
+    delete aoCompositeServerSolutionPath
+    doLast {
+   		 logger.quiet("Deleted ${solutionName} Solution UI files from "+aoCompositeServerSolutionPath)
+    }
+}
+
+task cleanSolution(type: Delete, dependsOn: ['cleanDeployedSolutionJar','cleanDeployedSolutionUI']) {
+}
+
+task deploySolutionJars(type: Copy, dependsOn: ['jar','sourcesJar'] ) {
+	def aoCompositeServerOutputPath = file("${aoCompositeServerPath}/src/main/webapp/libs")
+	def projectLibPath = file("$project.buildDir/libs/")
+	
+	from (projectLibPath){ include '*.jar'}
+	 into aoCompositeServerOutputPath
+	doLast {
+		logger.quiet( "${rootProject.name}.jar and ${rootProject.name}-sources.jar from "+projectLibPath+" are copied to "+aoCompositeServerOutputPath)
+	}
+}
+
+task copySolutionUI(type: Copy) {
+	
+	def aoplatformServerOutputPath = file("${aoCompositeServerPath}/src/main/webapp/main-ui/solutions/"+"${solutionName}")
+	def generatedFolder = file("$projectDir/custom-ui/generated/")
+	 from generatedFolder
+	 into aoplatformServerOutputPath
+	 
+	 from 'resources'
+	 into aoplatformServerOutputPath
+	 doLast {
+	  logger.quiet( "UI Files from ${generatedFolder} are copied to "+aoplatformServerOutputPath)
+	 }
+}
+
+task copyWebAppResources(type: Copy) {
+    from 'custom-ui/generated/'
+    into 'build/dist/main-ui'
+}
+
+task copySolutionResources(type: Copy, dependsOn: 'jar') {
+   from 'resources'
+   into 'build/dist/resources'
+}
+
+task copySolutionLiquibase(type: Copy, dependsOn: 'jar') {
+
+   from 'liquibase'
+   into 'build/dist/liquibase'   
+}
+
+task packageSolutionArtifacts(type: Copy, dependsOn: 'jar') {
+   from ('build/libs'){
+   	include '**/*.jar'
+   }
+   
+   from 'libraries'
+   
+   into 'build/dist/libs'   
+   
+   dependsOn('copySolutionResources')
+   dependsOn('copySolutionLiquibase')
+   dependsOn('copyWebAppResources')
+}
+
+
+task copyDeploymentArtifacts(type: Copy, dependsOn: 'packageSolutionArtifacts') {
+	
+   from "deploy.bat", "deploy.sh", "deploy.properties"
+   into 'build/dist'
+}
+
+task buildSolutionArchive(type: Zip, dependsOn: 'clean' ) {
+	dependsOn 'copyDeploymentArtifacts'
+	
+	baseName "$solutionName"
+    includeEmptyDirs=true	
+	extension "$deployArchiveExt" 
+    from 'build/dist/'
+    exclude '**/node_modules/**'
+    destinationDir(file('dist/'))
+    zip64 true
+    doLast {
+   	   logger.quiet("Solution archive ${solutionName}.zip created and copied to ${rootProject.name}/dist folder.")
+   	}
+}
+
+task deploySolution(type: Copy, dependsOn:runTest){
+
+}
+              
+task buildAndCopySolutionJarAndUIFiles(type: Copy, dependsOn: ['deploySolutionJars','copySolutionUI']) {
+}
+
+
+
+task copySolutionUIFiles(type: Copy, dependsOn: ['copySolutionUI']) {
+}
+
+
+configure(buildAndCopySolutionJarAndUIFiles){
+	group = 'ao-solution'
+	description = 'Build and Copy Solution Jar & UI files to AO Composite Server [**Requires server restart]'
+}
+
+
+configure(copySolutionUIFiles){
+	group = 'ao-solution'
+	description = 'Copy Solution UI files to AO Composite Server'
+}
+
+configure(buildSolutionArchive){
+	group = 'ao-solution'
+	description = 'Build AO Solution archive'
+}
+
+configure(deploySolution){
+	group = 'ao-solution'
+	description = 'Deploy Solution Json to AO Composite Server through test case'
+}
+
+configure(cleanSolution){
+	group = 'ao-solution'
+	description = 'Clean UI files,Jars in Solution Project and in AO Composite Server [**Requires server restart]'
+}
+ 

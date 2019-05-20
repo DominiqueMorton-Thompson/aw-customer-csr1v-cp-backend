@@ -1,0 +1,47 @@
+@import "../node_modules/@apporchid/vulcanuxcontrols/themes/blue/variables.less";
+
+.vux-popup {
+	.webix_win_head {
+			border-top: 0;
+			.webix_layout_toolbar {
+				&.app-expand-toolbar {
+					background: #0385cd;
+					.app-expand-toolbar-title {
+						div {
+							color: #ffffff;
+							font-family: @font-stack-bold;
+							.font-size(18);
+						}
+					}
+				}
+				.app-expand-toolbar-close-icon {
+						button {
+							background: #0385cd;
+							color:#ffffff;
+							font-family: @font-stack-bold;
+							padding: 8px 0;      
+							line-height: 18px !important;      
+								.webix_icon {
+									color: #0385cd;
+									margin-top: -4px;            
+							}
+						}
+				}
+			}
+		}
+		.webix_win_content {
+			height: 100% !important;
+		}
+		.webix_win_body {
+			height: 100% !important;
+			// overflow-y: scroll;
+		}
+		.micro-app > div {
+			height: 100% !important;
+			width: 100% !important;
+        }
+        .vulcanux-app-detail-renderer > div {
+           // height: 100% !important;
+			//width: 100% !important;
+        }
+}

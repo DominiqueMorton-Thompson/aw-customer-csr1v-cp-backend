@@ -1,0 +1,13 @@
+encrypt:
+ key-store:
+    location: Aoserver.jks
+    password: Ase\rV5Er@12
+    alias: aoplatformkey
+    secret: Ase\rV5Er@12@secret123
+
+oauth2-rest-client:
+    user-name: deploy
+    password: '{cipher}AQBsMH0Jytlq+J6biFMKUf4mRQ3A5EAAr67PZiaWbprHKH1n1cXlGC26L2ybgqdnYPjr8wkYQyZvuFnITVrkiVPXahV2konL7uF8b+jnG00TGm4OrlpLnm2g01xS3+fvvZgPboIzDo6mENksw9nrTRMx4NS5+pIRrlSwVjAkE9/p3S57kdCYe1oDLz9umy+v0Hn3d/cMcyV4kUzgNMlT1/6/q3Pq7rQzcQU3/dQbNfYZY3d9PWts8O9lL6RjOOE3rMxFosjIjZcTaVzNZtVUVAF9DTPKPk2oeGi3WugObSpDxdXW6150HlCGYAjMhx+hlMIr+1iqhvAFgHFj0vk5rhuonoIv0AKpGalzYWlI8v2ellqP2FNw3UcvnakhrfZCRk8='
+    access-uri: http://localhost:8090/oauth/token
+    client-id: aoservercoreapp  
+    client-secret: my-secret-token-to-change-in-production

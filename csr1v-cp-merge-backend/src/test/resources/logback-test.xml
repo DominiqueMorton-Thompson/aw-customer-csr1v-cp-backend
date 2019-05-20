@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="15 seconds">
+
+
+	<include resource="org/springframework/boot/logging/logback/defaults.xml" />
+	<property resource="application.yml" />
+	<!-- If LOG_FILE is already set, use that Otherwise, if LOG_PATH is set, 
+		use that suffixed with cloudseer.log Otherwise, if LOG_TEMP is set, use that 
+		suffixed with /cloudseer.log Otherwise, if java.io.tmpdir is set, use that 
+		suffixed with /cloudseer.log Otherwise use /tmp/cloudseer.log -->
+	<!-- this is not mandatory -->
+	<!-- <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}cloudseer.log}"/> -->
+	<property name="LOG_FILE" value="cloudseer" />
+
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<charset>UTF-8</charset>
+			<pattern>%d %-4relative [%thread] {PID}: %-5level %logger{35} M -
+				%msg%n %ex{full}</pattern>
+		</encoder>
+	</appender>
+
+	<!-- <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"> 
+		<file>${user.dir}/logs/cloudseer.log</file> <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"> 
+		daily rollover. Make sure the path matches the one in the file element or 
+		else the rollover logs are placed in the working directory. <fileNamePattern>${user.dir}/logs/${LOG_FILE}-%d{yyyy-MM-dd}-%i.log 
+		</fileNamePattern> <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"> 
+		<maxFileSize>20MB</maxFileSize> </timeBasedFileNamingAndTriggeringPolicy> 
+		keep 10 days' worth of history <maxHistory>10</maxHistory> </rollingPolicy> 
+		<encoder> <charset>UTF-8</charset> <pattern>%d %-4relative [%thread] {PID}: 
+		%-5level %logger{35} M - %msg%n %ex{full}</pattern> </encoder> </appender> -->
+
+	<!-- changes for schedulers -->
+	<!-- it's a proxy appender that creates one child appender per each unique 
+		value of a given runtime property -->
+	<appender name="FILE-THREAD" class="ch.qos.logback.classic.sift.SiftingAppender">
+
+		<!-- This is MDC value -->
+		<!-- We will assign a value to 'logFileName' via Java code -->
+		<discriminator>
+			<key>logFileName</key>
+			<defaultValue>${user.dir}/logs/${LOG_FILE}</defaultValue>
+		</discriminator>
+
+		<sift>
+
+			<!-- A standard RollingFileAppender, the log file is based on 'logFileName' 
+				at runtime -->
+			<appender name="FILE-${logFileName}"
+				class="ch.qos.logback.core.rolling.RollingFileAppender">
+				<file>${logFileName}.log</file>
+
+				<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+					<Pattern>
+						%d{yyyy-MM-dd HH:mm:ss} %mdc [%thread] %level %logger{35}
+						- %msg%n
+					</Pattern>
+				</encoder>
+
+				<rollingPolicy
+					class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+					<FileNamePattern>${logFileName}-configdata-%d{yyyy-MM-dd}.%i.log.zip
+					</FileNamePattern>
+					<MinIndex>1</MinIndex>
+					<MaxIndex>10</MaxIndex>
+				</rollingPolicy>
+
+				<triggeringPolicy
+					class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+					<MaxFileSize>10MB</MaxFileSize>
+				</triggeringPolicy>
+
+			</appender>
+
+		</sift>
+	</appender>
+
+
+	<root level="WARN">
+		<!--<appender-ref ref="FILE-THREAD" /> <appender-ref ref="FILE" /> -->
+		<appender-ref ref="CONSOLE" />
+	</root>
+
+	<logger name="com.apporchid" level="INFO" />
+
+</configuration>

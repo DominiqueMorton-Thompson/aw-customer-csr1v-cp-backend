@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+       <changeSet id="csr1v-0000000000001" author="none" dbms="postgresql,oracle,h2">
+		<loadData encoding="UTF-8"
+			file="classpath:config/liquibase/csr1v-cp-merge-backend-datasources.csv"
+			separator="," quotchar='"' tableName="db_datasource" schemaName="common" >
+			<column header="datasource_name" name="datasource_name" type="string"/>
+			<column header="db_type" name="db_type" type="numeric"/>
+			<column header="user_name" name="user_name" type="string"/>
+			<column header="password" name="password" type="string"/>
+			<column header="init_size" name="init_size" type="numeric"/>	
+			<column header="max_size" name="max_size" type="numeric"/>
+			<column header="max_idle" name="max_idle" type="numeric"/>
+			<column header="pool_provider_type" name="pool_provider_type" type="string"/>
+			<column header="max_waittime" name="max_waittime" type="numeric"/>
+			<column header="created_by" name="created_by" type="string"/>
+			<column header="addl_properties" name="addl_properties" type="skip"/>
+			<column header="created_date" name="created_date" type="string"/>
+			<column header="last_modified_by" name="last_modified_by" type="skip"/>
+			<column header="last_modified_date" name="last_modified_date" type="skip"/>		
+		</loadData>
+	</changeSet>	
+	
+	<changeSet id="csr1v-0000000000002" author="none" runOnChange="true">
+		<update tableName="configuration_property" schemaName="common">
+			<column name="value">com.apporchid,com.amwater</column>
+			<where>name='scan.packages'</where>
+		</update>		
+	</changeSet>
+	
+	<changeSet id="csr1v-0000000000003" author="none" dbms="postgresql,oracle,h2">
+		<sql dbms="postgresql,oracle,h2"
+            splitStatements="true">INSERT INTO common.db_datasource (datasource_name, db_type, jdbc_url, user_name, password, init_size, max_size, max_idle, pool_provider_type, max_waittime, addl_properties, created_by, created_date, last_modified_by, last_modified_date) VALUES ('csr1vcpbackendDB', 2, 'jdbc:postgresql://awsnlcld001.amwaternp.net:5432/ao-aw-cloudseer3', 'postgres', 'vjedqz)D6kd', 2, 10, 2, 'DBCP', 12000, NULL, 'admin', '2019-04-20 10:11:12.12', NULL, NULL)
+    	</sql>
+	</changeSet> 
+	
+	 <changeSet id="csr1v-0000000000004" author="none" dbms="postgresql,oracle,h2">
+		<sql dbms="postgresql,oracle,h2"
+            splitStatements="true">INSERT INTO common.db_datasource (datasource_name, db_type, jdbc_url, user_name, password, init_size, max_size, max_idle, pool_provider_type, max_waittime, addl_properties, created_by, created_date, last_modified_by, last_modified_date) VALUES ('ao-csrcp2', 2, 'jdbc:postgresql://localhost:5432/ao-config-db', 'postgres', '{cipher}AQCR7/3WAjb+/+UDUJEZuBsREHhrQC4sslEKDEUjwIbGLctIa5iQTnVLVsjzY27ix4ObIjRvPqjWIXLHIJuDDX8sNe25zEXf6Yfu7ZHTOFXj2bUMamqKpMet51qv6MzjQDgLldyYouZz908v3E7bmBjS8MtNiCTBhLqj7l7F3pC8aq78NlnwG7q6EIXVF0BtA59RBpyi+sIyRGJFxvRARfSyuIALliaWvnkS8vafs+R42BCeWcy+NpCSbhM3Z3K2nbh9lSSA3xePYSry5zoTr+W+8+4pq2AwJ1QNqoZVA+bYGxNKADaHAnfDJ9gQaNYgLDs06h086e4D9b5c/8b+DNyy+m0eKFMGMXg1GXfGIIhSyajboHcADJMSUJVxiBXQ2F0=', 2, 10, 2, 'DBCP', 12000, NULL, 'admin', '2019-04-20 10:11:12.12', NULL, NULL)
+    	</sql>
+	</changeSet>    
+	
+	<changeSet id="csr1v-0000000000005" author="none" dbms="postgresql,oracle,h2">
+		
+		<sql dbms="postgresql,oracle,h2"
+            splitStatements="true">INSERT INTO cloudseer.oauth_client_config VALUES (3, 'c1v_test', 'https://sa-dev.amwater.com/secureauth95/oidctoken.aspx', '2effe24704ca40f9b6e966b0a3d448dd', '7af065491ce5c53c585ad7fd3cab8e650d97639c0971e795eb82056a07563cc3', 'password', 'amicloudseersvc', '6yS23AaEdBAd', NULL, 'access_token', 'REQUEST_HEADER', false, false, '{''domain'':''amwater.com'',''path'':''/'',''scope'':''openid'',''header-name'':''Authorization''}', '""', '2018-09-25 01:29:23.218629', NULL, NULL)
+    	</sql>
+	</changeSet>
+
+	<changeSet  id="csr1v-0000000000006" author="none" runOnChange="true">
+    <sqlFile dbms="postgresql,oracle,h2"
+            path="csr1cp_pipeline_configuration.sql"
+            relativeToChangelogFile="true"
+            splitStatements="true"
+            stripComments="true"/>
+</changeSet>
+	
+</databaseChangeLog>
